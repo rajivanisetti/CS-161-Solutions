@@ -1,10 +1,16 @@
+#| Goal State Definition |#
+
+(defvar *goal-state* '(0 1 2 3 4 5 6 7 8)) 
 
 
-(defvar *goal-state* '(0 1 2 3 4 5 6 7 8))  ; goal state definition 
+#| List of operators (tile indices to switch) with respect to index of blank |#
 
-(defvar *operators* '((1 3) (0 2 4) (1 5) (0 4 6) (1 3 5 7) (2 4 8) (3 7) (4 6 8) (5 7)))   ;; list of operators (tile indices to switch) with respect to index of blank 
+(defvar *operators* '((1 3) (0 2 4) (1 5) (0 4 6) (1 3 5 7) (2 4 8) (3 7) (4 6 8) (5 7)))  
 
-(defvar *manhattan-distances*   ;; table of manhattan distances with indices [tile in question, current position of tile in question] that gives Manhattan distance from current position to goal position
+
+#| Table of manhattan distances with indices [tile in question, current position of tile in question] that gives Manhattan distance from current position to goal position |#
+
+(defvar *manhattan-distances*   
   '((0 1 2 1 2 3 2 3 4)	
     (1 0 1 2 1 2 3 2 3)
     (2 1 0 3 2 1 4 3 2)
@@ -16,17 +22,23 @@
     (4 3 2 3 2 1 2 1 0))
 )
 
-(defun ida* (state) "IDA* wrapper function that accepts a beginning state of 8-puzzle and returns shortest list of tiles to push to reach goal state"
-    (recurse state (get-heuristic state))
+
+
+
+#| Search Functions |#
+
+
+(defun IDA* (state) "IDA* wrapper function that accepts a beginning state of 8-puzzle and returns shortest list of tiles to push to reach goal state"
+    (recurseIDA* state (get-heuristic state))
 )
 
-(defun recurse (state f-limit)  "Auxiliary function that uses iterative deeping A* to compute optimal path to goal state"
+(defun recurseIDA* (state f-limit)  "Auxiliary function that uses iterative deeping A* to compute optimal path to goal state"
     (cond ((null state) "fail")                         ;; base/edge case condition
         (t (let* ((result (DFID state 0 nil f-limit)))  ;; store first search in variable 
                 (cond ((null result) nil)               ;; if null result, we were already at goal state 
                       ((equal result "fail") "fail")    ;; if a failure, return fail 
                       ((not (atom result)) result)      ;; if result is a list, it found a solution path 
-                    (t (recurse state result))          ;; otherwise, result is new f-limit, so search once again 
+                    (t (recurseIDA* state result))          ;; otherwise, result is new f-limit, so search once again 
                 )
            )
         )
@@ -36,7 +48,7 @@
 (defun DFID(state g visited-states f-limit)     "DFID function to return sequence of tiles to push to reach goal state"
     (let ((f (+ g (get-heuristic state))))
         (cond ((> f f-limit) f)                                                                             ;; if f > f-limit, return f
-              ((equal state *goal-state*) nil)                                                              ;; if goal state, no more moves 
+              ((equal state *goal-state*) nil)                                                              ;; if at goal state, no more moves 
               ((equal (mod (count-inversions state) 2) 1) "fail")                                           ;; if number of inversions in state is odd, unsolvable
             (t (let* ((children-states-with-operations (get-children-states-with-operations state))         ;; get children states with their linked operations from current state
                       (results (results-of-children children-states-with-operations (+ g 1) (cons state visited-states) f-limit))   ;; get results of recursing on each of children states 
@@ -55,6 +67,10 @@
     )
 )
 
+
+
+
+#| F-limit Functions |#
 
 
 (defun expand-f-limit (results)     "Auxiliary wrapper function to get new f-limit"
@@ -76,6 +92,12 @@
     )
 )
 
+
+
+
+#| Heuristic Functions |#
+
+
 (defun get-heuristic (state)    "Auxiliary function to get heuristic measure, essentially a wrapper function for get-manhattan-distances starting from index 0"
     (get-manhattan-distances state 0)
 )
@@ -90,6 +112,15 @@
 (defun manhattan-distance (number index)    "Auxiliary function to get Manhattan distance of certain tile from its location in goal state"
     (get-Nth (get-Nth *manhattan-distances* number) index)
 )
+
+
+
+
+
+
+
+#| Stopping Condition Functions |#
+
 
 (defun count-inversions (state)     "Auxiliary function to count number of inversions within a state"
     (cond ((null state) 0)
@@ -112,6 +143,15 @@
         (t (is-redundant-state state (cdr visited-states)))
     )
 )
+
+
+
+
+
+
+
+#| Recursion Evaluation Functions |#
+
 
 (defun find-success (results index)     "Auxiliary function to search the results of recursing on all children for any success"
     (cond ((null results) nil)
@@ -137,6 +177,12 @@
         )
     )
 )
+
+
+
+
+#| Helper Functions for Generating Children/Indexing |#
+
 
 (defun get-operation-from-child (child)     "Auxiliary helper function that returns the operation from a (operation, resulting state) tuple"
     (car child)
