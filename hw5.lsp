@@ -6,7 +6,7 @@ top-level function is made to compute the minimax/maximin of the rest of the chi
 evaluated, the top-level function returns two values as a list: first is the (max for maximin, min for minimax) of the first of the two return values of the first 
 and remaining children, and secondly the sum of the number of nodes examined for the first child and remaining children. |# 
 
-(defun MAXIMIN (lst alpha beta) "MAXIMIN function that completes minimax search assuming root node is a MAX node"
+(defun MAXIMIN (lst alpha beta) "MAXIMIN function that completes minimax search assuming root node is a MAX node, returns a list containing the value of search and number of nodes examined"
     (cond ((atom lst) (list lst 1))                                                                         ;; if a leaf node just return list containing its value and 1
         (t  (let ((first (MINIMAX (car lst) alpha beta)))                                                   ;; examine first child of list of children
                 (cond ((null (cdr lst)) first)                                                              ;; if no other children, return the result of the first child 
@@ -25,7 +25,7 @@ and remaining children, and secondly the sum of the number of nodes examined for
     )
 )
 
-(defun MINIMAX (lst alpha beta) "MINIMAX function that completes minimax search assuming root node is a MIN node"
+(defun MINIMAX (lst alpha beta) "MINIMAX function that completes minimax search assuming root node is a MIN node, returns a list containing the value of search and number of nodes examined"
     (cond ((atom lst) (list lst 1))                                                                         ;; if a leaf node just return list containing its value and 1
         (t  (let ((first (MAXIMIN (car lst) alpha beta)))                                                   ;; examine first child of list of children
                 (cond ((null (cdr lst)) first)                                                              ;; if no other children, return the result of the first child 
