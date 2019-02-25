@@ -35,14 +35,16 @@ This recursive call makes use of a helper function to generate the new initial s
 peg, and the goal state is simply the cdr of the goal list due to the nature of our reverse sorted list. |#
 
 (defun solve (state goal)	"General solver function that attempts to place next largest peg and then all remaining pegs recursively"
-	(cond ((null goal) nil)	;; if no more pegs to move, return null list of further operations 
-		(t 	(let ((NLDIndex (car state))	;; current peg of next largest disk 
-				  (NLDGoal (car goal)))		;; goal peg of next largest disk 
-				(cond ((equal NLDIndex NLDGoal) (solve (cdr state) (cdr goal)))	;; if already at goal, return the solution of adjusting the remaining pegs 
-					(t	(let* ((auxiliaryPeg (findAuxiliary NLDIndex NLDGoal))	;; auxiliary peg 
-							   (diskNumber (length state))						;; largest disk number is length of list 
-							   (auxiliaryGoal (createAuxiliaryGoal auxiliaryPeg (- diskNumber 1))))	;; create goal state of moving smaller disks
-							(append (solve (cdr state) auxiliaryGoal) (list (list diskNumber NLDIndex NLDGoal)) (solve auxiliaryGoal (cdr goal)))	;; append the solution of moving the smaller disks to the operation of moving the next largest disk to the solution of reassigning the remaining smaller pegs, assuming they now all rest on the auxiliary peg
+	(cond ((null goal) nil)														;; if no more pegs to move, return no further operations 
+		(t 	(let ((NLDIndex (car state))										;; current peg of next largest disk 
+				  (NLDGoal (car goal)))											;; goal peg of next largest disk 
+				(cond ((equal NLDIndex NLDGoal) (solve (cdr state) (cdr goal)))	;; if already at goal, return solution of moving remaining disks 
+					(t	(let* ((auxiliaryPeg (findAuxiliary NLDIndex NLDGoal))						;; auxiliary peg 
+							   (diskNumber (length state))											;; largest disk number is length of list 
+							   (auxiliaryGoal (createAuxiliaryGoal auxiliaryPeg (- diskNumber 1))))	;; create goal state for moving smaller disks
+							(append (solve (cdr state) auxiliaryGoal) (list (list diskNumber NLDIndex NLDGoal)) (solve auxiliaryGoal (cdr goal)))	
+							;; append the solution of moving the smaller disks to the operation of moving the next largest disk to the 
+							;; solution of reassigning the remaining smaller pegs, assuming they now all rest on the auxiliary peg
 						)
 					)
 				)
