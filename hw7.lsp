@@ -35,10 +35,10 @@ This recursive call makes use of a helper function to generate the new initial s
 peg, and the goal state is simply the cdr of the goal list due to the nature of our reverse sorted list. |#
 
 (defun solve (state goal)	"General solver function that attempts to place next largest peg and then all remaining pegs recursively"
-	(cond ((null goal) nil)														;; if no more pegs to move, return no further operations 
-		(t 	(let ((NLDIndex (car state))										;; current peg of next largest disk 
-				  (NLDGoal (car goal)))											;; goal peg of next largest disk 
-				(cond ((equal NLDIndex NLDGoal) (solve (cdr state) (cdr goal)))	;; if already at goal, return solution of moving remaining disks 
+	(cond ((null goal) nil)																			;; if no more pegs to move, return no further operations 
+		(t 	(let ((NLDIndex (car state))															;; current peg of next largest disk 
+				  (NLDGoal (car goal)))																;; goal peg of next largest disk 
+				(cond ((equal NLDIndex NLDGoal) (solve (cdr state) (cdr goal)))						;; if already at goal, return solution of moving remaining disks 
 					(t	(let* ((auxiliaryPeg (findAuxiliary NLDIndex NLDGoal))						;; auxiliary peg 
 							   (diskNumber (length state))											;; largest disk number is length of list 
 							   (auxiliaryGoal (createAuxiliaryGoal auxiliaryPeg (- diskNumber 1))))	;; create goal state for moving smaller disks
