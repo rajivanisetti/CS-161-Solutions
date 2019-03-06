@@ -2,6 +2,7 @@
 	(refuteHelper lst 0 1 nil)
 )
 
+#| I'm sorry about how ugly this top-level helper function looks, I tried to indent to make it easier, and hopefully the comments should clear things up |#
 
 (defun refuteHelper(lst indexOne indexTwo resolutions)	"Helper function for refuting a sequence of clauses" 
 	(cond ((>= indexOne (length lst)) 'fail)	;; if indexOne is greater than list, we've gone through all resolutions
@@ -25,13 +26,13 @@
 							  (firstPreviousResolution (findInResolutions resolutions first)) (secondPreviousResolution (findInResolutions resolutions second)))	;; finding previous resolution paths for clauses 
 								(cond 	((null firstPreviousResolution) ;; no first resolution path 
 										(cond ((null secondPreviousResolution) ;; no second either 
-												(let ((res (refuteHelper newLst 0 1 (cons (list resolution (list first) (list second)) resolutions))))	;; must add brand new base resolution to list 
+												(let ((res (refuteHelper newLst 0 1 (cons (list resolution (list first) (list second)) resolutions))))	;; must add brand new base resolution to list, and recurse
 													(cond ((equal res 'fail) (refuteHelper lst (+ indexOne 1) (+ indexOne 2) resolutions))	;; if failure, try next possible resolution
 														(t res)	;; return good results 
 													)
 												)
 											  )
-											  (t (let ((res (refuteHelper newLst 0 1 (cons (list resolution (list first) secondPreviousResolution) resolutions)))) ;; can chain second resolution and add to list 
+											  (t (let ((res (refuteHelper newLst 0 1 (cons (list resolution (list first) secondPreviousResolution) resolutions)))) ;; can chain second resolution and add to list, and recurse
 													(cond ((equal res 'fail) (refuteHelper lst (+ indexOne 1) (+ indexOne 2) resolutions)) ;; if failure, try next possible resolution
 														(t res) ;; return good results
 													)
@@ -40,18 +41,18 @@
 										)
 									)
 									(t (cond ((null secondPreviousResolution) 
-												(let ((res (refuteHelper newLst 0 1 (cons (list resolution firstPreviousResolution (list second)) resolutions)))) ;; can chain first resolution and add to list 
+												(let ((res (refuteHelper newLst 0 1 (cons (list resolution firstPreviousResolution (list second)) resolutions)))) ;; can chain first resolution and add to list, and recurse 
 													(cond ((equal res 'fail) (refuteHelper lst (+ indexOne 1) (+ indexOne 2) resolutions)) ;; if failure, try next possible resolution
 														(t res) ;; return good results 
 													)
 												)
 											  )
-											  (t (let ((res (refuteHelper newLst 0 1 (cons (list resolution firstPreviousResolution secondPreviousResolution) resolutions)))) ;; can chain both resolutions and add to list 
+											  (t (let ((res (refuteHelper newLst 0 1 (cons (list resolution firstPreviousResolution secondPreviousResolution) resolutions)))) ;; can chain both resolutions and add to list, and recurse 
 													(cond ((equal res 'fail) (refuteHelper lst (+ indexOne 1) (+ indexOne 2) resolutions)) ;; if failure, try next possible resolution
 														(t res) ;; return good results 
 													)
 												)
-											  )
+											)
 										)
 									)
 								)
@@ -63,7 +64,7 @@
 		)
 	)
 
-(defun findInResolutions(resolutions clause)
+(defun findInResolutions(resolutions clause) "Helper function to find a resolution path within resolutions that lead to the creation of clause"
 	(cond ((null resolutions) nil)
 	      ((equal (car (car resolutions)) clause) (car resolutions))
 		(t (findInResolutions (cdr resolutions) clause))
