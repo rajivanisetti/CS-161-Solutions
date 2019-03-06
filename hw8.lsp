@@ -1,50 +1,57 @@
-(defun refute (lst)
+(defun refute (lst)	"Initial function to refute a list of clauses, calls auxiliar helper function"
 	(refuteHelper lst 0 1 nil)
 )
 
 
-(defun refuteHelper(lst indexOne indexTwo latestResolution)	"Helper function for refuting a sequence of clauses" 
-	(cond ((>= indexOne (length lst)) 'fail)
-		  ((>= indexTwo (length lst)) (refuteHelper lst (+ indexOne 1) (+ indexOne 2) latestResolution))
+(defun refuteHelper(lst indexOne indexTwo resolutions)	"Helper function for refuting a sequence of clauses" 
+	(cond ((>= indexOne (length lst)) 'fail)	;; if indexOne is greater than list, we've gone through all resolutions
+		  ((>= indexTwo (length lst)) (refuteHelper lst (+ indexOne 1) (+ indexOne 2) resolutions))	;; if indexTwo exceeds list size, advance first pointer
 		(t 	(let* ((first (getNth lst indexOne))
 				   (second (getNth lst indexTwo))
 				   (resolution (resolve first second)))
-				(write-line "First")
-				(write first)
-				(write-line "")
-				(write-line "Second")
-				(write second)
-				(write-line "")
-				(write-line "Resolution")
-				(write resolution)
-				(write-line "")
-				(write-line "Latest res")
-				(write latestResolution)
-				(write-line "")
-				(cond ((equal resolution 'fail) (refuteHelper lst indexOne (+ indexTwo 1) latestResolution))
-					  ((null resolution) 
-						(cond ((null latestResolution) (list nil (list first) (list second)))
-							  ((equal first (car latestResolution)) (list nil (list second) (cons first (cdr latestResolution))))
-							  ((equal second (car latestResolution)) (list nil (list first) (cons second (cdr latestResolution))))
-							(t (list nil (list first) (list second)))
-						)
-					  )
-					(t 	(let ((newLst (cons resolution (deleteElement (deleteElement lst first) second))))
-							(cond ((equal first (car latestResolution))
-									(let ((res (refuteHelper newLst 0 1 (list resolution latestResolution (list second)))))
-										(cond ((equal res 'fail) (refuteHelper lst (+ indexOne 1) (+ indexOne 2) latestResolution))
-											(t res)
+				(cond ((equal resolution 'fail) (refuteHelper lst indexOne (+ indexTwo 1) resolutions)) ;; if can't resolve, move to next possible resolution
+					  ((null resolution) ;; success !
+						(cond ((null resolutions) (list nil (list first) (list second)))	;; if no resolutions so far, no need to chain resolutions
+							(t 	(let ((firstPreviousResolution (findInResolutions resolutions first)) (secondPreviousResolution (findInResolutions resolutions second)))
+									(cond 	((null firstPreviousResolution) ;; if no resolution path to get to first 
+												(cond ((null secondPreviousResolution) (list nil (list first) (list second)))	;; if no resolution path to second too, no chaining resolutions needed
+													(t (list nil (list first) (cons second (cdr secondPreviousResolution))))	;; must chain second resolution if resolution path found 
+												)	
+											)
+											(t 	(cond ((null secondPreviousResolution) (list nil (list second) (cons first (cdr firstPreviousResolution))))	;; if first but no second resolution, only chain first
+													(t (list nil (cons first (cdr firstPreviousResolution)) (cons second (cdr secondPreviousResolution))))	;; must chain both first and second resolutions 
+											)))))))
+					(t 	(let ((newLst (cons resolution (deleteElement (deleteElement lst first) second)))	;; new list with new resolutions and without old clauses 
+							  (firstPreviousResolution (findInResolutions resolutions first)) (secondPreviousResolution (findInResolutions resolutions second)))	;; finding previous resolution paths for clauses 
+								(cond 	((null firstPreviousResolution) ;; no first resolution path 
+										(cond ((null secondPreviousResolution) ;; no second either 
+												(let ((res (refuteHelper newLst 0 1 (cons (list resolution (list first) (list second)) resolutions))))	;; must add brand new base resolution to list 
+													(cond ((equal res 'fail) (refuteHelper lst (+ indexOne 1) (+ indexOne 2) resolutions))	;; if failure, try next possible resolution
+														(t res)	;; return good results 
+													)
+												)
+											  )
+											  (t (let ((res (refuteHelper newLst 0 1 (cons (list resolution (list first) secondPreviousResolution) resolutions)))) ;; can chain second resolution and add to list 
+													(cond ((equal res 'fail) (refuteHelper lst (+ indexOne 1) (+ indexOne 2) resolutions)) ;; if failure, try next possible resolution
+														(t res) ;; return good results
+													)
+												)
+											  )
 										)
-									))
-								  ((equal second (car latestResolution))
-								  	(let ((res (refuteHelper newLst 0 1 (list resolution (list first) latestResolution))))
-										(cond ((equal res 'fail) (refuteHelper lst (+ indexOne 1) (+ indexOne 2) latestResolution))
-											(t res)
-										)
-									))
-								(t (let ((res (refuteHelper newLst 0 1 (list resolution (list first) (list second)))))
-										(cond ((equal res 'fail) (refuteHelper lst (+ indexOne 1) (+ indexOne 2) latestResolution))
-											(t res)
+									)
+									(t (cond ((null secondPreviousResolution) 
+												(let ((res (refuteHelper newLst 0 1 (cons (list resolution firstPreviousResolution (list second)) resolutions)))) ;; can chain first resolution and add to list 
+													(cond ((equal res 'fail) (refuteHelper lst (+ indexOne 1) (+ indexOne 2) resolutions)) ;; if failure, try next possible resolution
+														(t res) ;; return good results 
+													)
+												)
+											  )
+											  (t (let ((res (refuteHelper newLst 0 1 (cons (list resolution firstPreviousResolution secondPreviousResolution) resolutions)))) ;; can chain both resolutions and add to list 
+													(cond ((equal res 'fail) (refuteHelper lst (+ indexOne 1) (+ indexOne 2) resolutions)) ;; if failure, try next possible resolution
+														(t res) ;; return good results 
+													)
+												)
+											  )
 										)
 									)
 								)
@@ -54,6 +61,12 @@
 				)
 			)
 		)
+	)
+
+(defun findInResolutions(resolutions clause)
+	(cond ((null resolutions) nil)
+	      ((equal (car (car resolutions)) clause) (car resolutions))
+		(t (findInResolutions (cdr resolutions) clause))
 	)
 )
 
